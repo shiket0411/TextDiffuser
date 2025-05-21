@@ -6,11 +6,9 @@
 # This file defines a set of commonly used utility functions.
 # ------------------------------------------
 
-import os
 import re
 import cv2
 import math
-import shutil
 import string
 import textwrap
 import numpy as np
@@ -347,3 +345,26 @@ def inpainting_merge_image(original_image, mask_image, inpainting_image):
     mask_image = mask_image.point(table, "1")
     merged_image = Image.composite(inpainting_image, original_image, mask_image)
     return merged_image
+
+def cv2pil(image):
+    ''' OpenCV型 -> PIL型 '''
+    new_image = image.copy()
+    if new_image.ndim == 2:  # モノクロ
+        pass
+    elif new_image.shape[2] == 3:  # カラー
+        new_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2RGB)
+    elif new_image.shape[2] == 4:  # 透過
+        new_image = cv2.cvtColor(new_image, cv2.COLOR_BGRA2RGBA)
+    new_image = Image.fromarray(new_image)
+    return new_image
+
+def pil2cv(image):
+    ''' PIL型 -> OpenCV型 '''
+    new_image = np.array(image, dtype=np.uint8)
+    if new_image.ndim == 2:  # モノクロ
+        pass
+    elif new_image.shape[2] == 3:  # カラー
+        new_image = cv2.cvtColor(new_image, cv2.COLOR_RGB2BGR)
+    elif new_image.shape[2] == 4:  # 透過
+        new_image = cv2.cvtColor(new_image, cv2.COLOR_RGBA2BGRA)
+    return new_image

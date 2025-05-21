@@ -18,16 +18,14 @@ from tqdm.auto import tqdm
 from typing import Optional
 from packaging import version
 from termcolor import colored
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance # import for visualization
+from PIL import Image, ImageOps, ImageEnhance # import for visualization
 from huggingface_hub import HfFolder, Repository, create_repo, whoami
 
 import datasets
-from datasets import load_dataset
 from datasets import disable_caching
 
 import torch
 import torch.utils.checkpoint
-import torch.nn.functional as F
 from torchvision import transforms
 
 import accelerate
@@ -36,10 +34,8 @@ from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
 import diffusers
-from diffusers import AutoencoderKL, DDPMScheduler, StableDiffusionPipeline, UNet2DConditionModel 
-from diffusers.optimization import get_scheduler
-from diffusers.training_utils import EMAModel
-from diffusers.utils import check_min_version, deprecate
+from diffusers import AutoencoderKL, DDPMScheduler, UNet2DConditionModel 
+from diffusers.utils import check_min_version
 from diffusers.utils.import_utils import is_xformers_available
 
 import transformers
@@ -48,8 +44,6 @@ from transformers import CLIPTextModel, CLIPTokenizer
 from util import segmentation_mask_visualization, make_caption_pil, combine_image, transform_mask, filter_segmentation_mask, inpainting_merge_image
 from model.layout_generator import get_layout_from_prompt
 from model.text_segmenter.unet import UNet
-
-import torchsnooper
 
 disable_caching()
 check_min_version("0.15.0.dev0")
@@ -506,7 +500,7 @@ def main():
         text_mask_tensor = transforms.ToTensor()(text_mask).unsqueeze(0).cuda().sub_(0.5).div_(0.5)
         with torch.no_grad():
             segmentation_mask = segmenter(text_mask_tensor)
-            
+
         segmentation_mask = segmentation_mask.max(1)[1].squeeze(0)
         segmentation_mask = filter_segmentation_mask(segmentation_mask)
         segmentation_mask = torch.nn.functional.interpolate(segmentation_mask.unsqueeze(0).unsqueeze(0).float(), size=(256, 256), mode='nearest')
